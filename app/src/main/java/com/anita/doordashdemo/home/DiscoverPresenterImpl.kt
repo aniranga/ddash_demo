@@ -11,13 +11,8 @@ class DiscoverPresenterImpl(private val discoverView: DiscoverView, dataAccessor
 
     private val dataAccessor: DataAccessor = dataAccessorProvider.getDataAccessor()
     private var disposables: CompositeDisposable = CompositeDisposable()
-    private var restaurantList: ArrayList<Restaurant> = ArrayList()
 
     override fun fetchItems() {
-        if (restaurantList.isNotEmpty()) {
-            discoverView.onFetchedAllItems(restaurantList)
-            return
-        }
         discoverView.showProgress()
         dataAccessor.getRestaurantList(RestaurantListSubscriber())
     }
@@ -29,8 +24,7 @@ class DiscoverPresenterImpl(private val discoverView: DiscoverView, dataAccessor
     private inner class RestaurantListSubscriber : Observer<List<Restaurant>> {
         override fun onNext(list: List<Restaurant>) {
             discoverView.hideProgress()
-            restaurantList.addAll(list)
-            discoverView.onFetchedAllItems(restaurantList)
+            discoverView.onFetchedAllItems(list)
         }
 
         override fun onError(e: Throwable) {
