@@ -5,4 +5,10 @@ interface DiscoverPresenter {
     fun fetchItems()
 
     fun destroy()
+
+    fun canLoadMore() : Boolean
+
+    fun loadMore()
+
+
 }

@@ -23,11 +23,13 @@ import kotlinx.android.synthetic.main.fragment_discover.view.*
 
 class DiscoverFragment: Fragment(), DiscoverView, DiscoverListAdapter.ClickCallback {
 
+
     private var presenter: DiscoverPresenter?= null
     private var navController : NavController?= null
     private var snackBar: Snackbar?= null
     private var recyclerView: RecyclerView?= null
     private var layoutManager: LinearLayoutManager? = null
+    private var isLoading: Boolean = false
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         return inflater.inflate(R.layout.fragment_discover, container, false)
@@ -43,6 +45,7 @@ class DiscoverFragment: Fragment(), DiscoverView, DiscoverListAdapter.ClickCallb
         val spacing = resources.getDimensionPixelSize(R.dimen.recycler_item_spacing)
         val spaceDecoration = SpacesItemDecoration(spacing)
         recyclerView?.addItemDecoration(spaceDecoration)
+        recyclerView?.addOnScrollListener(onScrollListener)
         presenter = DiscoverPresenterImpl(this, activity?.application as DataAccessorProvider)
         presenter?.fetchItems()
     }
@@ -81,10 +84,44 @@ class DiscoverFragment: Fragment(), DiscoverView, DiscoverListAdapter.ClickCallb
         navController?.navigate(R.id.action_discoverFragment_to_discoverDetail, restInfoBundle)
     }
 
+    override fun loadMoreCompleted(resultList: List<DiscoverPageListItem>) {
+        isLoading = false
+        if (activity != null) {
+            recyclerView?.visibility = View.VISIBLE
+            recyclerView?.adapter = DiscoverListAdapter(resultList,this, activity as Context)
+        }
+    }
+
     inner class SpacesItemDecoration(private val mSpace: Int) : RecyclerView.ItemDecoration() {
 
         override fun getItemOffsets(outRect: Rect, view: View, parent: RecyclerView, state: RecyclerView.State) {
             outRect.bottom = mSpace;
+        }
+    }
+
+    private val onScrollListener = object : RecyclerView.OnScrollListener() {
+        override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+            super.onScrolled(recyclerView, dx, dy)
+
+            if (layoutManager == null) {
+                return
+            }
+
+            val visibleItemCount = layoutManager?.childCount
+            val totalItemCount = layoutManager?.itemCount
+            val firstVisibleItemPosition = layoutManager?.findFirstVisibleItemPosition()
+
+            var canLoadMore = presenter?.canLoadMore()
+            if (canLoadMore == null || !canLoadMore!!) {
+                return
+            }
+
+            if (!isLoading) {
+                if (visibleItemCount!! + firstVisibleItemPosition!! >= totalItemCount!! && firstVisibleItemPosition >= 0) {
+                    isLoading = true
+                    presenter?.loadMore()
+                }
+            }
         }
     }
 

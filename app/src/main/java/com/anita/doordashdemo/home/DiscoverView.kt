@@ -9,4 +9,6 @@ interface DiscoverView {
     fun hideProgress()
 
     fun showError()
+
+    fun loadMoreCompleted(resultList: List<DiscoverPageListItem>)
 }

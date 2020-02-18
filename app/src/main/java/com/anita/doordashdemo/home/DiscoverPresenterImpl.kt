@@ -11,6 +11,9 @@ class DiscoverPresenterImpl(private val discoverView: DiscoverView, dataAccessor
 
     private val dataAccessor: DataAccessor = dataAccessorProvider.getDataAccessor()
     private var disposables: CompositeDisposable = CompositeDisposable()
+    private var itemsList: ArrayList<Restaurant> = ArrayList()
+    var viewResList = ArrayList<DiscoverPageListItem>()
+    var canLoadMore: Boolean = true
 
     override fun fetchItems() {
         discoverView.showProgress()
@@ -24,12 +27,12 @@ class DiscoverPresenterImpl(private val discoverView: DiscoverView, dataAccessor
     private inner class RestaurantListSubscriber : Observer<List<Restaurant>> {
         override fun onNext(list: List<Restaurant>) {
             discoverView.hideProgress()
-            var resList = ArrayList<DiscoverPageListItem>()
             for (res in list) {
-                resList.add(RestaurantListItem(DiscoverPageListItem.ListItemViewType.OBJ_LIST_ITEM, res))
+                itemsList.add(res)
+                viewResList.add(RestaurantListItem(DiscoverPageListItem.ListItemViewType.OBJ_LIST_ITEM, res))
             }
             //resList.add(LoadMoreProgressListItem(DiscoverPageListItem.ListItemViewType.LOAD_MORE_PROGRESS_ITEM))
-            discoverView.onFetchedAllItems(resList)
+            discoverView.onFetchedAllItems(viewResList)
         }
 
         override fun onError(e: Throwable) {
@@ -44,5 +47,42 @@ class DiscoverPresenterImpl(private val discoverView: DiscoverView, dataAccessor
         override fun onSubscribe(d: Disposable) {
             disposables.add(d)
         }
+    }
+
+    override fun canLoadMore(): Boolean {
+        return canLoadMore
+    }
+
+    override fun loadMore() {
+        dataAccessor.fetchItemsPage(itemsList.size, 20, LoadMoreSubscriber())
+    }
+
+    private inner class LoadMoreSubscriber : Observer<List<Restaurant>> {
+        override fun onComplete() {
+
+        }
+
+        override fun onSubscribe(d: Disposable) {
+
+        }
+
+        override fun onNext(t: List<Restaurant>) {
+            if (t != null && t.isEmpty()) {
+                canLoadMore = false
+                discoverView.loadMoreCompleted(viewResList)
+                return
+            }
+            for (res in t) {
+                itemsList.add(res)
+                viewResList.add(RestaurantListItem(DiscoverPageListItem.ListItemViewType.OBJ_LIST_ITEM, res))
+            }
+            //resList.add(LoadMoreProgressListItem(DiscoverPageListItem.ListItemViewType.LOAD_MORE_PROGRESS_ITEM))
+            discoverView.loadMoreCompleted(viewResList)
+        }
+
+        override fun onError(e: Throwable) {
+
+        }
+
     }
 }
