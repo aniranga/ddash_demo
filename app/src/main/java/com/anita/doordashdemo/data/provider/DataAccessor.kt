@@ -7,4 +7,6 @@ interface DataAccessor {
 
     fun getRestaurantList(callback: Observer<List<Restaurant>>)
 
+    fun fetchItemsPage(offset: Int, numItems: Int, callback: Observer<List<Restaurant>>)
+
 }

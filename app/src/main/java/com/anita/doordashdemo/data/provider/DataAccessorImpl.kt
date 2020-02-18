@@ -4,6 +4,7 @@ import android.app.Application
 import com.anita.doordashdemo.BuildConfig
 import com.anita.doordashdemo.data.model.Restaurant
 import io.reactivex.Observable
+import io.reactivex.ObservableEmitter
 import io.reactivex.Observer
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
@@ -14,10 +15,11 @@ import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory
 import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.http.GET
 import retrofit2.http.Url
+import java.lang.StringBuilder
 
 class DataAccessorImpl(val app: Application) : DataAccessor {
 
-    val SERVER_URL = "https://api.doordash.com/v2/restaurant/?lat=37.422740&lng=-122.139956&offset=0&limit=50"
+    val SERVER_URL = "https://api.doordash.com/v2/restaurant/?lat=37.422740&lng=-122.139956"
     private var apiService: ApiService? = null
 
     init {
@@ -25,7 +27,22 @@ class DataAccessorImpl(val app: Application) : DataAccessor {
     }
 
     override fun getRestaurantList(callback: Observer<List<Restaurant>>) {
-        apiService?.getRestaurantListData(SERVER_URL)
+        /*apiService?.getRestaurantListData(SERVER_URL)
+            ?.observeOn(AndroidSchedulers.mainThread())
+            ?.subscribeOn(Schedulers.io())
+            ?.subscribe(callback)*/
+        fetchItemsPage(0, 10, callback) //default to fetch 50 items
+    }
+
+    override fun fetchItemsPage(offset: Int, numItems: Int, callback: Observer<List<Restaurant>>) { //e.g. "https://api.doordash.com/v2/restaurant/?lat=37.422740&lng=-122.139956&offset=0&limit=50"
+        var url = StringBuilder(SERVER_URL)
+        if (offset > 0) {
+            url.append("&offset=").append(offset)
+        }
+        if (numItems > 0) {
+            url.append("&limit=").append(numItems)
+        }
+        apiService?.getRestaurantListData(url.toString())
             ?.observeOn(AndroidSchedulers.mainThread())
             ?.subscribeOn(Schedulers.io())
             ?.subscribe(callback)
@@ -58,5 +75,6 @@ class DataAccessorImpl(val app: Application) : DataAccessor {
 
         @GET
         fun getRestaurantListData(@Url url: String): Observable<List<Restaurant>>
+
     }
 }

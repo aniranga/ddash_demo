@@ -24,7 +24,12 @@ class DiscoverPresenterImpl(private val discoverView: DiscoverView, dataAccessor
     private inner class RestaurantListSubscriber : Observer<List<Restaurant>> {
         override fun onNext(list: List<Restaurant>) {
             discoverView.hideProgress()
-            discoverView.onFetchedAllItems(list)
+            var resList = ArrayList<DiscoverPageListItem>()
+            for (res in list) {
+                resList.add(RestaurantListItem(DiscoverPageListItem.ListItemViewType.OBJ_LIST_ITEM, res))
+            }
+            //resList.add(LoadMoreProgressListItem(DiscoverPageListItem.ListItemViewType.LOAD_MORE_PROGRESS_ITEM))
+            discoverView.onFetchedAllItems(resList)
         }
 
         override fun onError(e: Throwable) {

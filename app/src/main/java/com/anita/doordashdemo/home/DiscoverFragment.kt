@@ -55,7 +55,7 @@ class DiscoverFragment: Fragment(), DiscoverView, DiscoverListAdapter.ClickCallb
         super.onDestroy()
     }
 
-    override fun onFetchedAllItems(resultList: List<Restaurant>) {
+    override fun onFetchedAllItems(resultList: List<DiscoverPageListItem>) {
         if (activity != null) {
             recyclerView?.visibility = View.VISIBLE
             recyclerView?.adapter = DiscoverListAdapter(resultList,this, activity as Context)
